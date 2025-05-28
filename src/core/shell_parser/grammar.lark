@@ -1,0 +1,38 @@
+// 语法规则
+?start: command
+
+?command: _WS* (seq | pipe | call) _WS*
+
+seq: _WS* command _WS* ";" _WS* command _WS*  -> seq
+   | _WS* seq _WS* ";" _WS* command _WS*     -> seq
+
+pipe: _WS* pipe _WS* "|" _WS* call _WS*   -> pipe
+    | _WS* call _WS* "|" _WS* call _WS*   -> pipe
+
+call:  (redirection _WS+)* argument (_WS+ (argument | redirection))*
+redirection: (GTLT _WS* argument)
+_argument_atom: non_keyword | single_quoted | double_quoted | backquoted | variable
+argument: _argument_atom+
+
+double_quoted:  "\"" (doublequote_content | backquoted)* "\""
+
+backquoted: "`" backquote_content "`"
+
+// 词法规则
+non_keyword: NON_KEYWORD
+doublequote_content: DOUBLEQUOTE_CONTENT
+single_quoted: SINGLE_QUOTE
+backquote_content: BACKQUOTED_CONTENT
+variable: VARIABLE
+
+// 非关键字：排除 whitespace characters, quotes, newlines, semicolons `;`, vertical bar `|`, less than `<` and greater than `>`  
+NON_KEYWORD: /[^|;\$\s<>"'`]+/
+DOUBLEQUOTE_CONTENT: /[^"`]+/
+SINGLE_QUOTE: /'[^']*'/
+BACKQUOTED_CONTENT: /[^`]+/
+VARIABLE: /\$[^|;\$\s<>"'`]*/
+
+GTLT: />>/|/[<>]/
+
+
+_WS: /[ \t\n]+/
